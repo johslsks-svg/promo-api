@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Promo Admin Panel</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    .promo { border: 1px solid #ddd; padding: 10px; margin: 5px 0; display: flex; justify-content: space-between; }
+    .promo span { flex: 1; }
+    .promo button { flex: 0; }
+  </style>
+</head>
+<body>
+  <h1>Promo Admin Panel</h1>
+
+  <input type="text" id="newPromo" placeholder="Enter new promo text">
+  <button onclick="addPromo()">Add Promo</button>
+
+  <div id="promoList"></div>
+
+  <script>
+    const repo = 'username/promos-api'; // Replace with your GitHub username/repo
+    const path = 'promos.json';
+    const token = 'YOUR_GITHUB_TOKEN'; // Personal access token (with repo access)
+
+    let promos = [];
+    let sha = '';
+
+    // Load promos from GitHub
+    async function loadPromos() {
+      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+        headers: { Authorization: `token ${token}` }
+      });
+      const data = await res.json();
+      sha = data.sha;
+      const content = atob(data.content);
+      promos = JSON.parse(content);
+      renderPromos();
+    }
+
+    function renderPromos() {
+      const list = document.getElementById('promoList');
+      list.innerHTML = '';
+      promos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'promo';
+        div.innerHTML = `<span>${p.text}</span>
+                         <button onclick="deletePromo(${i})">Delete</button>`;
+        list.appendChild(div);
+      });
+    }
+
+    function addPromo() {
+      const input = document.getElementById('newPromo');
+      if(!input.value.trim()) return;
+      const newId = (promos.length + 1).toString();
+      promos.push({id: newId, text: input.value.trim()});
+      input.value = '';
+      savePromos();
+    }
+
+    function deletePromo(index) {
+      promos.splice(index, 1);
+      savePromos();
+    }
+
+    async function savePromos() {
+      const content = btoa(JSON.stringify(promos, null, 2));
+      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'Update promos via admin panel',
+          content,
+          sha
+        })
+      });
+      const data = await res.json();
+      sha = data.content.sha;
+      renderPromos();
+      alert('✅ Promos updated! Your Android app will fetch the latest.');
+    }
+
+    loadPromos();
+  </script>
+</body>
+</html>
