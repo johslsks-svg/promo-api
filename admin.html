@@ -21,22 +21,13 @@
   <div id="promoList"></div>
 
   <script>
-    const repo = 'username/promos-api'; // Replace with your GitHub username/repo
-    const path = 'promos.json';
-    const token = 'YOUR_GITHUB_TOKEN'; // Personal access token (with repo access)
-
+    const apiUrl = '/api/get_promos';
     let promos = [];
-    let sha = '';
 
-    // Load promos from GitHub
+    // Load promos from server
     async function loadPromos() {
-      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-        headers: { Authorization: `token ${token}` }
-      });
-      const data = await res.json();
-      sha = data.sha;
-      const content = atob(data.content);
-      promos = JSON.parse(content);
+      const res = await fetch(apiUrl);
+      promos = await res.json();
       renderPromos();
     }
 
@@ -67,23 +58,9 @@
     }
 
     async function savePromos() {
-      const content = btoa(JSON.stringify(promos, null, 2));
-      const res = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `token ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: 'Update promos via admin panel',
-          content,
-          sha
-        })
-      });
-      const data = await res.json();
-      sha = data.content.sha;
+      // Save to GitHub using token (or implement your own serverless write)
+      alert('✅ Promo updated! Please push changes to GitHub or implement a write API.');
       renderPromos();
-      alert('✅ Promos updated! Your Android app will fetch the latest.');
     }
 
     loadPromos();
