@@ -15,16 +15,16 @@
 <body>
   <h1>Promo Admin Panel</h1>
 
+  <input type="password" id="adminPassword" placeholder="Enter admin password">
   <input type="text" id="newPromo" placeholder="Enter new promo text">
   <button onclick="addPromo()">Add Promo</button>
-
   <div id="promoList"></div>
 
   <script>
     const apiUrl = '/api/get_promos';
+    const updateUrl = '/api/update_promos';
     let promos = [];
 
-    // Load promos from server
     async function loadPromos() {
       const res = await fetch(apiUrl);
       promos = await res.json();
@@ -58,9 +58,21 @@
     }
 
     async function savePromos() {
-      // Save to GitHub using token (or implement your own serverless write)
-      alert('✅ Promo updated! Please push changes to GitHub or implement a write API.');
-      renderPromos();
+      const password = document.getElementById('adminPassword').value;
+      if (!password) { alert('Enter admin password'); return; }
+
+      const res = await fetch(updateUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, promos })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message);
+        renderPromos();
+      } else {
+        alert('❌ ' + data.error);
+      }
     }
 
     loadPromos();
